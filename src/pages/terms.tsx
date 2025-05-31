@@ -38,7 +38,7 @@ You: a person or entity that is registered with GLOW HERB to use the Services.
 
 Contact Us
 Don't hesitate to contact us if you have any questions. 
-Via Email: glowherbnaturalshomemadeproduc@gmail.com 
+
 Via Phone Number: 7708434624
 
 Return & Refund Policy
