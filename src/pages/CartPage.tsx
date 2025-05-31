@@ -97,6 +97,7 @@ const CartPage: React.FC = () => {
           
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">🎉Free shipping on orders above ₹200🎉</h2>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Order Summary</h2>
               <div className="space-y-3">
                 <div className="flex justify-between text-gray-600">
