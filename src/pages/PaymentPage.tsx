@@ -14,31 +14,30 @@ interface PaymentFormData {
 }
 
 const PaymentPage: React.FC = () => {
-  // ─── 1) Grab cartItems in addition to cartTotal & clearCart ───
   const { cartItems, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
-  const shippingCost      = cartTotal >= 200 ? 0 : 50;
+  const shippingCost = cartTotal >= 200 ? 0 : 50;
   const totalWithShipping = cartTotal + shippingCost;
 
   const [formData, setFormData] = useState<PaymentFormData>({
-    name:       '',
-    phone:      '',
-    email:      '',
+    name: '',
+    phone: '',
+    email: '',
     screenshot: null,
   });
 
-  const [errors, setErrors]           = useState<Partial<Record<keyof PaymentFormData, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof PaymentFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
-  const [previewUrl, setPreviewUrl]     = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null); // ✅ added
 
-  // ─── Helper: Convert a File into a Base64‐encoded string ─────────────────
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = () => reader.abort();
-      reader.onload  = () => {
-        const base64data = reader.result as string; // e.g. "data:image/png;base64,iVBORw0KG…"
+      reader.onload = () => {
+        const base64data = reader.result as string;
         resolve(base64data);
       };
       reader.readAsDataURL(file);
@@ -55,7 +54,6 @@ const PaymentPage: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
-    console.log("Picked file:", file);
     setFormData(prev => ({ ...prev, screenshot: file }));
     setPreviewUrl(file ? URL.createObjectURL(file) : null);
     if (errors.screenshot) {
@@ -65,10 +63,7 @@ const PaymentPage: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof PaymentFormData, string>> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     } else if (!/^\d{10}$/.test(formData.phone)) {
@@ -79,26 +74,20 @@ const PaymentPage: React.FC = () => {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Invalid email address';
     }
-    if (!formData.screenshot) {
-      newErrors.screenshot = 'Payment screenshot is required';
-    }
-
+    if (!formData.screenshot) newErrors.screenshot = 'Payment screenshot is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!validateForm()) return;
     setIsSubmitting(true);
 
-    // ─── A) Convert the File into a Base64 string ────────────────────────────
     let base64Screenshot = '';
     if (formData.screenshot) {
       try {
         base64Screenshot = await fileToBase64(formData.screenshot);
-        console.log("📸 Base64 length:", base64Screenshot.length);
       } catch (err) {
         console.error("Failed to convert file to Base64:", err);
         setIsSubmitting(false);
@@ -106,22 +95,18 @@ const PaymentPage: React.FC = () => {
       }
     }
 
-    // ─── B) Build the cart‐items string just as before ───────────────────────
     const itemsString = cartItems
       .map(item => `${item.name} (${item.selectedWeight}) x ${item.quantity}`)
       .join(', ');
 
-    // ─── C) POST to your Apps Script URL (no Cloudinary needed) ─────────────
-    //     Make sure this matches the “Deployment → Latest code” URL from Apps Script
     const sheetsUrl = 'https://script.google.com/macros/s/AKfycbz5h0HITOKmP5weB8THgzlz3m5AdFDYOnensxeKeJfa7Jphero16sn0dyH-aoWs4FZb/exec';
 
-    // We are URL‐encoding the payload as x-www-form-urlencoded, just like a normal HTML form
     const bodyParams = new URLSearchParams();
-    bodyParams.append('Name',        formData.name);
-    bodyParams.append('Phone',       formData.phone);
-    bodyParams.append('Email',       formData.email);
-    bodyParams.append('Amount',      totalWithShipping.toString());
-    bodyParams.append('Items',       itemsString);
+    bodyParams.append('Name', formData.name);
+    bodyParams.append('Phone', formData.phone);
+    bodyParams.append('Email', formData.email);
+    bodyParams.append('Amount', totalWithShipping.toString());
+    bodyParams.append('Items', itemsString);
     bodyParams.append('ScreenshotBase64', base64Screenshot);
 
     try {
@@ -136,12 +121,10 @@ const PaymentPage: React.FC = () => {
       console.error("Error sending to Apps Script:", err);
     }
 
-    // ─── D) Now do your usual “order placed” UI flow ─────────────────────────
     setTimeout(() => {
       setIsSubmitting(false);
       setIsOrderPlaced(true);
       clearCart();
-
       setTimeout(() => {
         navigate('/');
       }, 3000);
@@ -179,21 +162,19 @@ const PaymentPage: React.FC = () => {
 
           <div className="mb-6 space-y-2">
             <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>      <span>₹{cartTotal}</span>
+              <span>Subtotal</span><span>₹{cartTotal}</span>
             </div>
             <div className="flex justify-between text-gray-600">
-              <span>Shipping</span>      <span>{shippingCost === 0 ? 'Free' : `₹${shippingCost}`}</span>
+              <span>Shipping</span><span>{shippingCost === 0 ? 'Free' : `₹${shippingCost}`}</span>
             </div>
             <div className="flex justify-between text-xl font-bold text-green-600 pt-2 border-t">
-              <span>Total</span>         <span>₹{totalWithShipping}</span>
+              <span>Total</span><span>₹{totalWithShipping}</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-gray-700 mb-2">
-                Full Name
-              </label>
+              <label htmlFor="name" className="block text-gray-700 mb-2">Full Name</label>
               <input
                 type="text"
                 id="name"
@@ -209,9 +190,7 @@ const PaymentPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-gray-700 mb-2">
-                Phone Number
-              </label>
+              <label htmlFor="phone" className="block text-gray-700 mb-2">Phone Number</label>
               <input
                 type="tel"
                 id="phone"
@@ -227,9 +206,7 @@ const PaymentPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-gray-700 mb-2">
-                Email Address
-              </label>
+              <label htmlFor="email" className="block text-gray-700 mb-2">Email Address</label>
               <input
                 type="email"
                 id="email"
@@ -254,6 +231,28 @@ const PaymentPage: React.FC = () => {
                 <div className="bg-white p-4 rounded-lg inline-block">
                   <img src={QR} alt="Payment QR Code" className="w-48 h-48" />
                 </div>
+
+                <div className="mt-4 flex flex-col items-center">
+  <p className="text-gray-700 text-sm mb-1">or pay to:</p>
+  <div className="flex items-center gap-2">
+    <span className="font-semibold text-green-700 text-base">7708434624</span>
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard.writeText('7708434624');
+        setCopyMessage('Mobile number copied!');
+        setTimeout(() => setCopyMessage(null), 2000);
+      }}
+      className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200 transition"
+    >
+      Copy
+    </button>
+  </div>
+  {copyMessage && (
+    <p className="mt-2 text-green-600 text-sm">{copyMessage}</p>
+  )}
+</div>
+
               </div>
 
               <div>
@@ -284,11 +283,7 @@ const PaymentPage: React.FC = () => {
                   </div>
                   {previewUrl && (
                     <div className="mt-4">
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="max-w-full h-auto rounded-lg"
-                      />
+                      <img src={previewUrl} alt="Preview" className="max-w-full h-auto rounded-lg" />
                     </div>
                   )}
                 </div>

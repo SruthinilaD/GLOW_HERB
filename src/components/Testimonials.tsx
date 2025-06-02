@@ -55,7 +55,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({ testimonials }) => {
         </div>
 
         <div className="relative max-w-4xl mx-auto">
-          <div className="relative h-[300px] md:h-[250px] overflow-hidden">
+          <div className="relative h-[430px] md:h-[250px] overflow-hidden">
             {testimonials.map((testimonial, index) => (
               <div 
                 key={testimonial.id}
