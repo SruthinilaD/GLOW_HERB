@@ -15,9 +15,13 @@ const Home: React.FC = () => {
   const { hash } = useLocation();
   const navigationType = useNavigationType();
 
+  // 1) Add this effect to run once on mount and show your prompt:
+useEffect(() => {
+  window.alert('Enjoy our nourishing face packs today—more exciting products coming soon.');
+}, []);
+
+  // 2) Your existing scroll‐into‐view effect:
   useEffect(() => {
-    // Only smooth‐scroll in if we arrived via a PUSH to /#products,
-    // not on an initial load or a browser refresh (POP).
     if (hash === '#products' && navigationType === 'PUSH') {
       const el = document.getElementById('products');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
